@@ -1,0 +1,142 @@
+\documentclass{WAReport}
+
+\usepackage{verbatim}
+
+\input{../TmpData/variables.tex}
+
+\title{Fun Stats With David :3}
+\author{For \Name\\by\\David Coslar} \date{\today}
+
+\begin{document}
+
+
+
+\maketitle
+
+\section{Foreword}
+
+Hello, \Name!
+This is the first section of this article, so I will introduce this a bit. This report essentially contains fun statistics. \emph{Fun} , here, means things I found interesting. If you don't like it, skip it (generally good advice). Each chapter will discuss the limitations of the methods employed after we talk about the interesting stuff. If you're not into that, then you can just skip it. All dates will be in the DD.MM.YYYY format. \\
+I hope you have fun! \\
+- David 
+\sidenote{P.S: If you want to know a statistic, or want to say something else about this to me, let me know!}
+
+\section{Introduction}
+Let's talk about limitations. First off, every message had to be recognized by my RegEx. A RegEx is a Rgular Expression; it is a formalisation of charecters. A RegEx is a word that "fits" to other words. Thus, if a message hasn't been recognized by my RegEx, then it wasn't counted. The reverse is true as well, if a ``message" was recognized which is not one, then there is a false positive in there. Either way, I would say that my method is accurate enough to generate trustworty results. The RegEx I used matches specifically WhatsApp's date-time format: DD.MM.YYYY, HH:MM - AUTHOR.
+
+As a side note, media data has some interesting behaviour. For example, Files are completely ignored. Pictures, as far as I know, are not. I am unsure about voice-messages.
+
+\section{General Stats}
+Some general statistics (before we move on :P): You sent a total of \TotalMsgCount \, messages in this chat (of \TotalMsgCountOverall \, overall; \TotalMsgCountRatio \% from you).
+
+\subsection{Daily Activity}
+On average, you send \AvgMsgCount \, messages per day. Your maximum was \MaxDayMsgCount \\(\MaxDayMsgCountDay.\MaxDayMsgCountMonth.\MaxDayMsgCountYear), while your minimum was \MinDayMsgCount \, (\MinDayMsgCountDay.\MinDayMsgCountMonth.\MinDayMsgCountYear). Your median was \MedianMsgCount. \autoref{fig:day_activity} shows the message frequency over different days. Please note that the minimum and maximum are only of days \emph{on which there were actual messages}.
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\DatePlotName}
+    \caption{Your texting frequency over all days of the chat data. The whiter a day is, the less messages were sent that day. The greener, the more messages were sent. Gray signalises a day without data.}
+    \label{fig:day_activity}
+\end{figure}
+
+\subsection{Time Activity}
+Your time activity is in the following part. Your messages were sorted by time, regardless of date. Therefore, two messages sent at 19:00 will increase the same point, even if they were sent half a year apart. Also, minutes were rounded down to the nearest multiple of five (13:07 $\rightarrow$ 13:05). \\
+
+The time at which you sent the most messages is \MostMsgTimeHour:\MostMsgTimeMin \, (\MostMsgTime \, total). The least messages were sent at \LeastMsgTimeHour:\LeastMsgTimeMin \, (\LeastMsgTime \, total). 
+
+The limits of this method are more complex. Depending on the rounding algorithm and the limitations of floatpoint representation of numbers, the results can change. That is also why all numbers are rounded down. Like this, an even distribution is achieved, just shifted a bit. Typical rounding would create a bias towards numbers ending with 0. Further, the least messages sent picks out the ``first" occurence. So if two times are tied, one is essentially picked at random. 
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\TimePlotName}
+    \caption{Your texting frequency over all days of the chat data. Purple represents low activity, while yellow represents high activity. The more blue the closer a point is to the center, the less the further away.}
+    \label{fig:hour_activity}
+\end{figure}
+
+\subsection{Word and Character Frequency}
+
+Another fun topic is word frequency analysis. If done correct, one can gain a lot of knowledge about one's style of writing. For example, which words appear the most after one word? What is the most/least used word? What if we exclude obvious choices, such as ``I" or ``you"? If we look at all words without any removing, we get the following five words as most used words:
+
+\begin{table}[h!]
+    \begin{tabular}{ c || c | c }
+        Ranking & Uncorrected & Corrected \\
+        \hline
+        1 & \MostCommonWordUncorrectedOne & \MostCommonWordCorrectedOne \\
+        2 & \MostCommonWordUncorrectedTwo & \MostCommonWordCorrectedTwo \\
+        3 & \MostCommonWordUncorrectedThree & \MostCommonWordCorrectedThree \\
+        4 & \MostCommonWordUncorrectedFour & \MostCommonWordCorrectedFour \\
+        5 & \MostCommonWordUncorrectedFive & \MostCommonWordCorrectedFive \\
+    \end{tabular}
+    \caption{Your most frequently used words. The ``correction'' is for obvious things that do not add too much information. Check Appendix \ref{sec:stop_words} for the exact information.}  
+\end{table}
+
+An interesting topic is symbol analysis. As a symbol, everything is counted that appears in a message. May it be the space character, ä, ß, a japanese kanji, a cyrillic letter or an emoji. Every single character is counted as a symbol.
+
+\begin{table}[h!]
+    \begin{tabular}{ c || c | c }
+        Ranking & Uncorrected & Corrected \\
+        \hline
+        1 & \MostCommonCharUncorrectedOne & \MostCommonCharCorrectedOne \\
+        2 & \MostCommonCharUncorrectedTwo & \MostCommonCharCorrectedTwo \\
+        3 & \MostCommonCharUncorrectedThree & \MostCommonCharCorrectedThree \\
+        4 & \MostCommonCharUncorrectedFour & \MostCommonCharCorrectedFour \\
+        5 & \MostCommonCharUncorrectedFive & \MostCommonCharCorrectedFive \\
+    \end{tabular}
+    \caption{Your most frequently used characters. The ``correction'' is pretty strong here, as the entire alphabet and some are excluded. Check Appendix \ref{sec:stop_chars} for the exact information.}  
+\end{table}
+
+\section{Different Conversations}
+This is, in my opinion, the most interesting part of the report. It answers the question ``How many different conversations were held over the entire chat?"
+This might seem pretty daunting, and it is. This whole procedure is an \emph{approximation} which, as you will see later, is actually quite useful. \\
+
+How does this work? First, all times were rounded down to the nearest 5 min. This is to reduce how data intensive this process is. Afterwards, I used something called "Bayesian Changepoint Analysis", which, essentially, does some fancy statistics to find changes in the mean and/or variance during the frequency of messages at a certain time interval. Let's visualize that for now. 
+
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\FrequencyPlotName}
+    \caption{The number of messages of everyone over all days of the chat data. As mentioned before, times were rounded down to the nearest 5 min.}
+    \label{fig:freq_activity}
+\end{figure}
+
+Lets run the actual analysis for now.
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\PosteriorPlotName}
+    \caption{The number of messages of everyone over all days of the chat data. The solid line represents the mean number of messages sent. The lower plot shows the probability a change in texting behaviour occurred. As mentioned before, times were rounded down to the nearest 5 min.}
+    \label{fig:post_activity}
+\end{figure}
+
+Using the probabilities of the bottom plot in \autoref{fig:post_activity}, we can find all conversations that happend in total. We can also clean the data better and visualize it more smartly. For example, we can remove segments without any messages and any conversation with less than 10 messages. If we then colour them differently too, we end up with \autoref{fig:idx_activity}
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\IdxConvoPlotName}
+    \caption{The number of messages of everyone over all days of the chat data. Each has a different colour than the ones adjacent to it. As mentioned before, times were rounded down to the nearest 5 min.}
+    \label{fig:idx_activity}
+\end{figure}
+
+
+Using all of this together, we can create something more. There is something called Sentiment Analysis, which essentially boils down to how positive, neutral and negative a message is, overall. What we can do now is comb through the messages and look at those scores. They are visualized in \autoref{fig:sent_over_time}.
+
+\begin{figure}[h!]
+    \includegraphics[width=\textwidth]{../Plots/\SentPlotName}
+    \caption{The number of messages of everyone over all days of the chat data. Each has a different colour than the ones adjacent to it. As mentioned before, times were rounded down to the nearest 5 min.}
+    \label{fig:sent_over_time}
+\end{figure}
+
+
+\clearpage
+\appendix
+
+\section{Stop Words}
+\label{sec:stop_words}
+Here is a list of all words that were filtered out as part of the correction of common words: \\
+\verbatiminput{../Plots/stop_words.txt}
+
+\clearpage
+
+\section{Stop Chars}
+\label{sec:stop_chars}
+Here is a list of all characters that were filtered out as part of the correction of common characters: \\
+\verbatiminput{../Plots/stop_chars.txt}
+
+
+
+\end{document}
