@@ -1,8 +1,8 @@
-# WhA
+# WhA! 👀
 Wh(atsApp)A(nalysis) is a software tool written in Python, LaTeX and a little bit of R.
 Functionality includes:
   - Anlysis of conversation patterns based on change in message frequency
-  - Sentiment analysis of partners
+  - Sentiment analysis of participants
   - Most/Least common texting times
   - Calendar overview of texting frequency over days
   - Automatically generated plots
